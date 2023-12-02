@@ -41,10 +41,18 @@ AXIS_TEXT = [
     'hits since insertion', 'recency'
 ]
 
-MODELS = ['ckpts/429/policy_1.pt']
+MODEL_DIR = 'ckpts/403/'
+EPISODE_START = 1
+EPISODE_END = 1
 
+MODELS = []
+
+for i in range(EPISODE_START, EPISODE_END + 1):
+    MODELS.append(MODEL_DIR + f'policy_{i}.pt')
 
 def plot_heat_map():
+    
+    
     weight_mat = np.zeros((len(MODELS), len(AXIS_TEXT)))
 
     for i, model_path in enumerate(MODELS):
@@ -56,7 +64,7 @@ def plot_heat_map():
     import matplotlib.pyplot as plt
     import seaborn as sns
 
-    plt.figure(figsize=(5, 10))
+    plt.figure(figsize=(10, 10))
     sns.heatmap(weight_mat, cmap='Blues',
                 xticklabels=MODELS, yticklabels=AXIS_TEXT)
     plt.tight_layout()

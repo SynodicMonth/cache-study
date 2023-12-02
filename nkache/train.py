@@ -125,14 +125,14 @@ class Agent:
         self.optimizer.step()
 
     def train(self, num_episodes=100, num_steps=50000):
+
         progress = Progress(
-            TextColumn(
-                "[progress.description]{task.description}",
-                "[progress.percentage]{task.percentage:>3.0f}%",
-                "{task.completed} of {task.total}"),
+            "[progress.description]{task.description}",
             BarColumn(),
             TaskProgressColumn(),
             TimeRemainingColumn(),
+            TextColumn(
+                "[bold blue]{task.fields[hit_rate]:.5f} {task.fields[reward]}"),
             transient=True,
         )
 
@@ -145,7 +145,7 @@ class Agent:
 
         for i_episode in range(num_episodes):
             curr_progress = progress.add_task(
-                f"[cyan]Episode {i_episode+1}/{num_episodes}", total=num_steps
+                f"[cyan]Episode {i_episode+1}/{num_episodes}", total=num_steps, hit_rate=0, reward=0
             )
             total_reward = 0
 
@@ -177,7 +177,8 @@ class Agent:
 
                 self.target_net.load_state_dict(target_net_state_dict)
 
-                progress.update(curr_progress, advance=1)
+                progress.update(curr_progress, advance=1, hit_rate=self.env.stats()[
+                                'hit_rate'], reward=total_reward)
 
                 if done:
                     hit_rate = self.env.stats()['hit_rate']
@@ -186,10 +187,14 @@ class Agent:
                     state, done = self.env.reset()
                     state = torch.tensor(
                         state, device=self.device).unsqueeze(0)
-                    
+
             hit_rate = self.env.stats()['hit_rate']
 
-            progress.log(f'episode {i_episode+1} reward: {total_reward} hit rate: {hit_rate}')
+            progress.update(curr_progress, completed=num_steps,
+                            hit_rate=hit_rate, reward=total_reward, visible=False)
+
+            print(
+                f'episode {i_episode+1}/{num_episodes} hit rate: {hit_rate:.5f} reward: {total_reward}')
 
             # save model
             torch.save(self.policy_net.state_dict(),
@@ -200,7 +205,7 @@ class Agent:
 
 def main():
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('--trace-dir', type=str, required=True)
+    argparser.add_argument('--trace', type=str, required=True)
     argparser.add_argument('--ckpt-dir', type=str, required=True)
     argparser.add_argument('--num-sets', type=int, default=2048)
     argparser.add_argument('--associativity', type=int, default=16)
@@ -219,7 +224,7 @@ def main():
     args = argparser.parse_args()
 
     agent = Agent(
-        trace_file=args.trace_dir,
+        trace_file=args.trace,
         ckpt_dir=args.ckpt_dir,
         num_sets=args.num_sets,
         associativity=args.associativity,
