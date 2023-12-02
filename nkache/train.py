@@ -36,6 +36,8 @@ class Agent:
             self.device = 'cuda'
         elif torch.backends.mps.is_available():
             self.device = 'mps'
+            
+        # torch-directml was tried but it was slower than cpu :(
 
         print(f'using device: {self.device}')
 

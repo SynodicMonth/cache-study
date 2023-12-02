@@ -2,7 +2,7 @@ from nkache.model import QNetwork
 
 import torch
 import numpy as np
-
+import os
 
 def calc_weights(model_path, observation_space, action_space, hidden_dim):
     model = QNetwork(observation_space, action_space, hidden_dim)
@@ -13,7 +13,8 @@ def calc_weights(model_path, observation_space, action_space, hidden_dim):
 
     assert len(weights) == observation_space
 
-    line_weights = weights[9:].reshape(action_space, -1).mean(axis=0)
+    line_weights = weights[9:].reshape(action_space, -1)
+    line_weights = np.abs(line_weights).mean(axis=0)
 
     weights = np.concatenate((weights[:9], line_weights))
 
@@ -43,16 +44,16 @@ AXIS_TEXT = [
 
 MODEL_DIR = 'ckpts/403/'
 EPISODE_START = 1
-EPISODE_END = 1
+EPISODE_END = 60
 
 MODELS = []
 
 for i in range(EPISODE_START, EPISODE_END + 1):
-    MODELS.append(MODEL_DIR + f'policy_{i}.pt')
+    model_path = MODEL_DIR + f'policy_{i}.pt'
+    if os.path.exists(model_path):
+        MODELS.append(model_path)
 
 def plot_heat_map():
-    
-    
     weight_mat = np.zeros((len(MODELS), len(AXIS_TEXT)))
 
     for i, model_path in enumerate(MODELS):
