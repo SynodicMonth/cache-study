@@ -193,7 +193,6 @@ class CacheEnv:
             line_observations[curr_line_idx].append(recency)
 
             curr_line_idx += 1
-            
 
         # normalize of line observations into [0, 1]
         line_observations: npt.NDArray = np.array(
@@ -363,7 +362,7 @@ class CacheEnv:
             self.curr_trace_idx)
 
         if next_access_indices is not None:
-            reward = 1 if next_access_indices[action] == min(
+            reward = 1 if next_access_indices[action] == max(
                 next_access_indices) else -1
 
         success = self.execute_action_on_non_compulsory_miss(
@@ -386,3 +385,22 @@ class CacheEnv:
             'total_access_cnt': self.total_access_cnt,
             'total_miss_cnt': self.total_miss_cnt,
         }
+
+    def belady_replacement_hit_rate(self) -> float:
+        _, done = self.reset()
+
+        while not done:
+            next_access_indices = self.belady_replacement_optimal(
+                self.curr_trace_idx)
+            if next_access_indices is None:
+                break
+
+            action = np.argmax(next_access_indices)
+
+            _, reward, done = self.step(action)
+            
+            assert reward == 1
+
+        hit_rate = self.stats()['hit_rate']
+
+        return hit_rate

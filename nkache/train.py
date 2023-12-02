@@ -58,6 +58,10 @@ class Agent:
         self.env.prepare_belady()
         print('env ready')
 
+        print('checking optimal hit rate')
+        optimal_hit_rate = self.env.belady_replacement_hit_rate()
+        print(f'optimal hit rate: {optimal_hit_rate}')
+
         self.batch_size = batch_size
         self.gamma = gamma
         self.eps_start = eps_start

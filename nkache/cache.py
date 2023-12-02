@@ -189,9 +189,9 @@ class CacheTest(unittest.TestCase):
         self.assertTrue(cache.try_insert(0x0d000040))
         self.assertTrue(cache.try_insert(0x0e000040))
         self.assertTrue(cache.try_insert(0x0f000040))
-        
+
         self.assertFalse(cache.try_insert(0x10000040))
-        
+
         tag, dirty = cache.evict_at(1, 3)
         self.assertEqual(tag, cache.tag(0x03000040))
         self.assertFalse(dirty)
