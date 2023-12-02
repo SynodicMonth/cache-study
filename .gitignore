@@ -4,3 +4,5 @@ ckpts/
 
 __pycache__/
 *.egg-info/
+
+traces/
