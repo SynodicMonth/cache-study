@@ -1,8 +1,12 @@
 .vscode/
 data/
 ckpts/
+traces/
 
+# python
 __pycache__/
 *.egg-info/
 
-traces/
+# rust
+target/
+Cargo.lock
