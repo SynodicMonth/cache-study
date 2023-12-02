@@ -382,5 +382,7 @@ class CacheEnv:
 
     def stats(self) -> Dict[str, float]:
         return {
-            'hit_rate': 1 - self.total_miss_cnt / self.total_access_cnt
+            'hit_rate': 1 - self.total_miss_cnt / self.total_access_cnt,
+            'total_access_cnt': self.total_access_cnt,
+            'total_miss_cnt': self.total_miss_cnt,
         }

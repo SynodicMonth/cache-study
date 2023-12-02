@@ -17,6 +17,7 @@ class Agent:
     def __init__(self,
                  trace_file: str,
                  ckpt_dir: str,
+                 stat_dir: str,
                  num_sets: int = 2048,
                  associativity: int = 16,
                  block_size: int = 64,
@@ -36,8 +37,10 @@ class Agent:
             self.device = 'cuda'
         elif torch.backends.mps.is_available():
             self.device = 'mps'
-            
+
         # torch-directml was tried but it was slower than cpu :(
+
+        self.stat_dir = stat_dir
 
         print(f'using device: {self.device}')
 
@@ -138,6 +141,8 @@ class Agent:
             transient=True,
         )
 
+        stat_csv = open(f'{self.stat_dir}/stat.csv', 'w')
+
         # show progress
         progress.start()
 
@@ -155,6 +160,10 @@ class Agent:
                 action = self._select_action(state)
                 observation, reward, done = self.env.step(action.item())
                 total_reward += reward
+
+                # write a stat entry
+                stat_csv.write(
+                    f'{self.steps_done},{i_episode+1},{t+1},{self.env.stats()["total_access_cnt"]},{self.env.stats()["total_miss_cnt"]},{reward}\n')
 
                 reward = torch.tensor([reward], device=self.device)
 
@@ -209,6 +218,7 @@ def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--trace', type=str, required=True)
     argparser.add_argument('--ckpt-dir', type=str, required=True)
+    argparser.add_argument('--stat-dir', type=str, required=True)
     argparser.add_argument('--num-sets', type=int, default=2048)
     argparser.add_argument('--associativity', type=int, default=16)
     argparser.add_argument('--block-size', type=int, default=64)
@@ -228,6 +238,7 @@ def main():
     agent = Agent(
         trace_file=args.trace,
         ckpt_dir=args.ckpt_dir,
+        stat_dir=args.stat_dir,
         num_sets=args.num_sets,
         associativity=args.associativity,
         block_size=args.block_size,

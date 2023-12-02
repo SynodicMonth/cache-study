@@ -1,6 +1,7 @@
 .vscode/
 data/
 ckpts/
+stats/
 traces/
 
 # python
