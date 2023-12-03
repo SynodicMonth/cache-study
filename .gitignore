@@ -11,3 +11,5 @@ __pycache__/
 # rust
 target/
 Cargo.lock
+
+.DS_Store
