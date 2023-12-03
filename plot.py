@@ -2,7 +2,11 @@ from nkache.model import QNetwork
 
 import torch
 import numpy as np
-import os
+import csv
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 def calc_weights(model_path, observation_space, action_space, hidden_dim):
     model = QNetwork(observation_space, action_space, hidden_dim)
@@ -25,6 +29,22 @@ def calc_weights(model_path, observation_space, action_space, hidden_dim):
 
     return weights
 
+def calc_hitrate(stat_path):
+    hit_rates = []
+
+    with open(stat_path, 'r') as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            accesses = int(row[3])
+            miss = int(row[4])
+            global_step = int(row[0])
+
+            if accesses > 0:
+                hit_rate = (accesses - miss) / accesses
+                hit_rates.append((global_step, hit_rate))
+
+    return hit_rates
+
 
 AXIS_TEXT = [
     'address preuse',
@@ -42,35 +62,50 @@ AXIS_TEXT = [
     'hits since insertion', 'recency'
 ]
 
-MODEL_DIR = 'ckpts/403/'
+# MODEL_DIR = 'ckpts/403/'
 EPISODE_START = 1
 EPISODE_END = 60
 
-MODELS = []
+MODELS = ['ckpts/403/policy_50.pt','ckpts/429/policy_50.pt','ckpts/437/policy_50.pt','ckpts/471/policy_50.pt','ckpts/483/policy_50.pt']
 
-for i in range(EPISODE_START, EPISODE_END + 1):
-    model_path = MODEL_DIR + f'policy_{i}.pt'
-    if os.path.exists(model_path):
-        MODELS.append(model_path)
+TRACES = ['403.gcc-48B', '429.mcf-217B', '437.leslie3d-273B', '471.omnetpp-188B', '483.xalancbmk-736B']
+
+# for i in range(EPISODE_START, EPISODE_END + 1):
+#     model_path = MODEL_DIR + f'policy_{i}.pt'
+#     if os.path.exists(model_path):
+#         MODELS.append(model_path)
 
 def plot_heat_map():
     weight_mat = np.zeros((len(MODELS), len(AXIS_TEXT)))
 
     for i, model_path in enumerate(MODELS):
         weight_mat[i] = calc_weights(model_path, 265, 16, 128)
-
-    # tanspose
-    weight_mat = weight_mat.T
-
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    plt.figure(figsize=(10, 10))
+        
+    plt.figure(figsize=(12, 5))
     sns.heatmap(weight_mat, cmap='Blues',
-                xticklabels=MODELS, yticklabels=AXIS_TEXT)
+                xticklabels=AXIS_TEXT, yticklabels=TRACES)
+    
     plt.tight_layout()
+    plt.show()
+    
+def plot_stat_figure():
+    plt.figure(figsize=(10, 10))
+    for i in [403, 429, 437, 471, 483]:
+        stat_path = f'stats/{i}/stat.csv'
+        data = calc_hitrate(stat_path)
+        
+        steps, hit_rates = zip(*data)
+        plt.plot(steps, hit_rates, label=str(i))
+        
+    plt.xlabel('Global Step')
+    plt.ylabel('Hit Rate')
+    plt.title('Hit Rate in Training')
+    
+    plt.legend()
+    plt.grid(True)
     plt.show()
 
 
 if __name__ == '__main__':
     plot_heat_map()
+    plot_stat_figure()
