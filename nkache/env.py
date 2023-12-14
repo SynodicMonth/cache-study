@@ -1,4 +1,4 @@
-from nkache.cache import Cache
+from cache import Cache
 from typing import Dict, Tuple, Optional, List
 from collections import deque
 from bisect import bisect_right
@@ -53,6 +53,9 @@ class CacheEnv:
 
         # belady list
         self.belady_list: Dict[Tuple[int, int], List[int]] = {}
+
+        # lru last use cycles
+        self.lru_last_use_cycles: List[List[int]] = [[0 for _ in range(associativity)] for _ in range(num_sets)]
 
     def observation_space(self) -> int:
         return 9 + 16 * self.associativity
@@ -207,12 +210,28 @@ class CacheEnv:
                                       np.where(min_line_observations == 0, 1, min_line_observations), range_line_observations))
 
         # flatten line observations
-        line_observations: List[float] = line_observations.flatten().tolist()
+        # line_observations: List[float] = line_observations.flatten().tolist()
+        # line_observations = line_observations
+        # print(line_observations.shape)
 
-        observation.extend(line_observations)
-        observation: npt.NDArray = np.array(observation, dtype=np.float32)
+        # extend each line observation with 'observation'
+        # line_observations = line_observations.tolist()
+        # for line_observation in line_observations:
+        #     line_observation.extend(observation)
 
-        return observation
+        # print(line_observations)
+        # use numpy to implement the above
+        # line_observations = np.concatenate(
+        #     (line_observations, np.tile(observation, (self.associativity, 1))), axis=1)
+
+        # print(line_observations.shape)
+        # print(line_observations)
+
+
+        # observation.extend(line_observations)
+        # observation: npt.NDArray = np.array(observation, dtype=np.float32)
+
+        return line_observations
 
     def execute_single_trace(self, trace_idx: int) -> bool:
         access_type, addr = self.traces[trace_idx]
@@ -253,6 +272,13 @@ class CacheEnv:
 
                 self.update_set_recency(set_index, tag)
 
+                for way_index, line in enumerate(self.cache[set_index]):
+                    if line.valid and line.tag == tag:
+                        self.lru_last_use_cycles[set_index][way_index] = trace_idx
+                        break
+                else:
+                    assert(False)
+
             else:
                 # non-compulsory miss
                 non_compulsory_miss = True
@@ -269,6 +295,13 @@ class CacheEnv:
             self.line_hits_since_insertion[(set_index, tag)] += 1
 
             self.update_set_recency(set_index, tag)
+
+            for way_index, line in enumerate(self.cache[set_index]):
+                if line.valid and line.tag == tag:
+                    self.lru_last_use_cycles[set_index][way_index] = trace_idx
+                    break
+            else:
+                assert(False)
 
         self.address_preuses[addr] = self.set_access_cnts[set_index]
 
@@ -326,6 +359,8 @@ class CacheEnv:
 
         self.line_hits_since_insertion[(set_index, tag)] = 0
         self.update_set_recency(set_index, tag)
+
+        self.lru_last_use_cycles[set_index][action] = self.curr_trace_idx
 
         return True
 
@@ -400,6 +435,18 @@ class CacheEnv:
             _, reward, done = self.step(action)
             
             assert reward == 1
+
+        hit_rate = self.stats()['hit_rate']
+
+        return hit_rate
+
+    def lru_replacement_hit_rate(self) -> float:
+        _, done = self.reset()
+        
+        while not done:
+            set_index = self.cache.set_index(self.traces[self.curr_trace_idx][1])
+            action = np.argmin(self.lru_last_use_cycles[set_index])
+            _, reward, done = self.step(action)
 
         hit_rate = self.stats()['hit_rate']
 
