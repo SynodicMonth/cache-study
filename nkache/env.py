@@ -205,9 +205,9 @@ class CacheEnv:
         max_line_observations = np.max(line_observations, axis=0)
         range_line_observations = max_line_observations - min_line_observations
         # normalize, if range is 0, then set to 0
-        line_observations = ((line_observations - min_line_observations) /
-                             np.where(range_line_observations == 0,
-                                      np.where(min_line_observations == 0, 1, min_line_observations), range_line_observations))
+        # line_observations = ((line_observations - min_line_observations) /
+        #                      np.where(range_line_observations == 0,
+        #                               np.where(min_line_observations == 0, 1, min_line_observations), range_line_observations))
 
         # flatten line observations
         # line_observations: List[float] = line_observations.flatten().tolist()

@@ -1,0 +1,48 @@
+{
+    "executable_name": "champsim_drrip_sppdev",
+    
+    "ooo_cpu": [
+        {
+            "rob_size": 256,
+            "fetch_width": 6,
+            "decode_width": 3,
+            "dispatch_width": 3,
+            "execute_width": 3,
+            "lq_width": 3,
+            "sq_width": 3,
+            "retire_width": 3
+        }
+    ],
+
+    "L1I": {
+        "sets": 64,
+        "ways": 8,
+        "latency": 4,
+        "prefetcher": "next_line_instr",
+        "replacement": "lru"
+    },
+
+    "L1D": {
+        "sets": 64,
+        "ways": 8,
+        "latency": 4,
+        "prefetcher": "next_line",
+        "replacement": "lru"
+    },
+
+    "L2C": {
+        "sets": 512,
+        "ways": 8,
+        "latency": 12,
+        "prefetcher": "ip_stride",
+        "replacement": "lru"
+    },
+
+    "LLC": {
+        "sets": 2048,
+        "ways": 16,
+        "latency": 26,
+        "prefetcher": "spp_dev",
+        "replacement": "drrip"
+    }
+}

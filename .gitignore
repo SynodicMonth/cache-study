@@ -3,10 +3,12 @@ data/
 ckpts/
 stats/
 traces/
+build/
 
 # python
 __pycache__/
 *.egg-info/
+venv/
 
 # rust
 target/

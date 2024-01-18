@@ -1,5 +1,5 @@
 {
-    "executable_name": "champsim_drrip",
+    "executable_name": "champsim_ship_ipstride",
     
     "ooo_cpu": [
         {
@@ -42,7 +42,7 @@
         "sets": 2048,
         "ways": 16,
         "latency": 26,
-        "prefetcher": "no",
-        "replacement": "drrip"
+        "prefetcher": "ip_stride",
+        "replacement": "ship"
     }
 }
